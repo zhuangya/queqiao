@@ -43,7 +43,7 @@ def test_process_luna_dict() -> None:
 
 def test_get_terra_content() -> None:
     assert (
-        get_terra_content("./test/example.dict.yaml")
+        get_terra_content(Path("./test/example.dict.yaml"))
         == """---
 name: terra_pinyin.mingxing
 version: "2016.06.30"
