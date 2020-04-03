@@ -41,12 +41,14 @@ def get_terra_content(luna_dict_file_path: Path) -> str:
     return meta + "...\n\n" + "\n".join(dict)
 
 
-def write_terra_file(luna_dict_file_path: Path, content: str) -> None:
+def write_terra_file(
+    luna_dict_file_path: Path, content: str
+) -> None:  # pragma: no cover
     dest = Path(getcwd()) / Path(str(luna_dict_file_path).replace("luna", "terra")).name
 
     with open(dest, "w") as f:
         f.write(content)
 
 
-def process(filepath: Path):
+def process(filepath: Path):  # pragma: no cover
     write_terra_file(filepath, get_terra_content(filepath))
