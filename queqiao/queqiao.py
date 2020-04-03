@@ -1,5 +1,5 @@
-from os import getcwd, path
-from typing import List
+from pathlib import Path
+from typing import List, Tuple
 
 from pypinyin import Style, lazy_pinyin
 
@@ -8,14 +8,18 @@ def spell_terra(word: str) -> str:
     return "".join(lazy_pinyin(word, style=Style.TONE3))
 
 
-def parse_luna_dict(luna_dict_file: str) -> List[str]:
+def parse_luna_dict(luna_dict_file: Path) -> Tuple[str, List[str]]:
     with open(luna_dict_file) as stream:
         file_content = stream.read()
 
-        dict = file_content.split("...")[1]
+        content = file_content.split("...")
+
+        meta = content[0].replace("luna", "terra")
+        dict = content[1]
+
         luna_dict = [word for word in dict.splitlines() if len(word) > 0]
 
-        return luna_dict
+        return (meta, luna_dict)
 
 
 def transform_line(line: str) -> str:
@@ -27,5 +31,10 @@ def process_luna_dict(luna_dict: List[str]) -> List[str]:
     return [transform_line(line) for line in luna_dict]
 
 
-def get_dest_filename(filepath: str) -> str:
-    return path.join(getcwd(), filepath.replace("luna", "terra"))
+def get_terra_content(luna_dict_file_path: str) -> str:
+    content = parse_luna_dict(Path(luna_dict_file_path))
+
+    meta = content[0]
+    dict = process_luna_dict(content[1])
+
+    return meta + "...\n\n" + "\n".join(dict)
