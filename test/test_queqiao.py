@@ -1,4 +1,12 @@
-from queqiao.queqiao import parse_luna_dict, process_luna_dict, spell_terra
+import tempfile
+from os import chdir, path
+
+from queqiao.queqiao import (
+    get_dest_filename,
+    parse_luna_dict,
+    process_luna_dict,
+    spell_terra,
+)
 
 
 def test_spell_terra() -> None:
@@ -24,3 +32,15 @@ def test_process_luna_dict() -> None:
         "你好\tni3hao3",
         "再见\tzai4jian4",
     ]
+
+
+def test_get_dest_filename() -> None:
+    temp_dir = tempfile.TemporaryDirectory()
+    chdir(temp_dir.name)
+
+    assert (
+        get_dest_filename("luna_pinyin.example.dict.yaml")
+        == path.realpath(temp_dir.name) + "/terra_pinyin.example.dict.yaml"
+    )
+
+    temp_dir.cleanup()

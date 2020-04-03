@@ -1,3 +1,4 @@
+from os import getcwd, path
 from typing import List
 
 from pypinyin import Style, lazy_pinyin
@@ -24,3 +25,7 @@ def transform_line(line: str) -> str:
 
 def process_luna_dict(luna_dict: List[str]) -> List[str]:
     return [transform_line(line) for line in luna_dict]
+
+
+def get_dest_filename(filepath: str) -> str:
+    return path.join(getcwd(), filepath.replace("luna", "terra"))
