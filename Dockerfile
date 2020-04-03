@@ -35,4 +35,3 @@ COPY . .
 
 # Run the executable
 ENTRYPOINT ["python", "-m", "queqiao"]
-CMD ["10"]
