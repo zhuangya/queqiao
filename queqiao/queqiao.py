@@ -42,7 +42,7 @@ def get_terra_content(luna_dict_file_path: Path) -> str:
 
 
 def write_terra_file(luna_dict_file_path: Path, content: str) -> None:
-    dest = Path(getcwd()) / Path(luna_dict_file_path).name
+    dest = Path(getcwd()) / Path(str(luna_dict_file_path).replace("luna", "terra")).name
 
     with open(dest, "w") as f:
         f.write(content)
