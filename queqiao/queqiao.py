@@ -2,43 +2,30 @@ from os import getcwd
 from pathlib import Path
 from typing import List, Tuple
 
-from pypinyin import Style, lazy_pinyin
-
-
-def spell_terra(word: str) -> str:
-    return "".join(lazy_pinyin(word, style=Style.TONE3))
+from pypinyin import Style, slug
 
 
 def parse_luna_dict(luna_dict_file: Path) -> Tuple[str, List[str]]:
     with open(luna_dict_file) as stream:
-        file_content = stream.read()
+        meta, dict = stream.read().split("...")
+        meta = meta.replace("luna", "terra")
 
-        content = file_content.split("...")
-
-        meta = content[0].replace("luna", "terra")
-        dict = content[1]
-
-        luna_dict = [word for word in dict.splitlines() if len(word) > 0]
+        luna_dict = list(filter(lambda x: len(x) > 0, dict.splitlines()))
 
         return (meta, luna_dict)
 
 
 def transform_line(line: str) -> str:
-    words = line.split("\t")
-    return "\t".join([words[0], spell_terra(words[0])])
-
-
-def process_luna_dict(luna_dict: List[str]) -> List[str]:
-    return [transform_line(line) for line in luna_dict]
+    word = line.split("\t")[0]
+    return "\t".join([word, slug(word, style=Style.TONE3, separator="")])
 
 
 def get_terra_content(luna_dict_file_path: Path) -> str:
-    content = parse_luna_dict(Path(luna_dict_file_path))
+    meta, luna_dict = parse_luna_dict(Path(luna_dict_file_path))
 
-    meta = content[0]
-    dict = process_luna_dict(content[1])
+    dict = "\n".join(map(lambda x: transform_line(x), luna_dict))
 
-    return meta + "...\n\n" + "\n".join(dict)
+    return meta + "...\n\n" + dict
 
 
 def write_terra_file(

@@ -1,15 +1,6 @@
 from pathlib import Path
 
-from queqiao.queqiao import (
-    get_terra_content,
-    parse_luna_dict,
-    process_luna_dict,
-    spell_terra,
-)
-
-
-def test_spell_terra() -> None:
-    assert spell_terra("中心") == "zhong1xin1"
+from queqiao.queqiao import get_terra_content, parse_luna_dict
 
 
 def test_parse_luna_dict() -> None:
@@ -32,13 +23,6 @@ use_preset_vocabulary: false
             "阿朵\ta duo",
         ],
     )
-
-
-def test_process_luna_dict() -> None:
-    assert process_luna_dict(["你好\tni hao", "再见\tzai jian"]) == [
-        "你好\tni3hao3",
-        "再见\tzai4jian4",
-    ]
 
 
 def test_get_terra_content() -> None:
