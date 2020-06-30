@@ -96,15 +96,15 @@ jobs:
             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
             docker push $IMAGE_NAME:$CIRCLE_TAG
 
-  deploy-tag:
-    working_directory: ~/app
-    executor: docker-publisher
-    steps:
-      # TODO:
-      # ssh 到对应的环境，更新 docker 的 container 版本到指定的 tag
-      # - run:
-      #     name: deploy to testing server.
-      #     command: ssh deploy $CIRCLE_TAG
+  # deploy-tag:
+  #   working_directory: ~/app
+  #   executor: docker-publisher
+  #   steps:
+  #     # TODO:
+  #     # ssh 到对应的环境，更新 docker 的 container 版本到指定的 tag
+  #     - run:
+  #         name: deploy to testing server.
+  #         command: ssh deploy $CIRCLE_TAG
 
 workflows:
   version: 2
