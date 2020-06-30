@@ -1,0 +1,141 @@
+---
+
+version: 2.1
+executors:
+  docker-publisher:
+    environment:
+      IMAGE_NAME: zhuangya/queqiao
+    docker:
+      - image:
+          circleci/buildpack-deps:stretch
+jobs:
+  test:
+    working_directory: ~/app
+    docker:
+      - image: circleci/python:3.8.2
+        environment:
+          WORKON_HOME: ~/.venvs
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - pip-packages-v2-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+            - pip-packages-v2-{{ .Branch }}-
+            - pip-packages-v2-
+      - run:
+          command: |
+            pip install pipenv
+            pipenv install --dev --deploy --ignore-pipfile
+      - save_cache:
+          paths:
+            - ~/.venvs
+            # https://pipenv.pypa.io/en/latest/diagnose/#your-dependencies-could-not-be-resolved
+            - ~/.cache/pipenv
+          key: pip-packages-v2-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+      - run:
+          name: run lint
+          command: PYTHONPATH=${PYTHONPATH}:${PWD} pipenv run lint
+      - run:
+          name: run tests
+          command: PYTHONPATH=${PYTHONPATH}:${PWD} pipenv run citest
+
+      - store_test_results:
+          path: test-results
+
+      - store_artifacts:
+          path: test-results
+  build:
+    working_directory: ~/app
+    executor: docker-publisher
+
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Docker Image
+          command: docker build -t $IMAGE_NAME:$(echo $CIRCLE_SHA1|cut -c1-7) .
+      - run:
+          name: Archive Docker Image
+          command: docker save -o image.tar $IMAGE_NAME
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./image.tar
+  publish-latest:
+    working_directory: ~/app
+    executor: docker-publisher
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - setup_remote_docker
+      - run:
+          name: Load Archived Docker Image
+          command: docker load -i /tmp/workspace/image.tar
+      - run:
+          name: Publish Docker Image to Docker Huub
+          command: |
+            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+            docker push $IMAGE_NAME:$(echo $CIRCLE_SHA1|cut -c1-7)
+  publish-tag:
+    working_directory: ~/app
+    executor: docker-publisher
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - setup_remote_docker
+      - run:
+          name: Load Archived Docker Image
+          command: docker load -i /tmp/workspace/image.tar
+      - run:
+          name: Tag Coresponding Docker Image
+          command: docker tag $IMAGE_NAME:$(echo $CIRCLE_SHA1|cut -c1-7) $IMAGE_NAME:$CIRCLE_TAG
+      - run:
+          name: Publish Docker Image to Docker Huub
+          command: |
+            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+            docker push $IMAGE_NAME:$CIRCLE_TAG
+
+  deploy-tag:
+    working_directory: ~/app
+    executor: docker-publisher
+    steps:
+      # TODO:
+      # ssh 到对应的环境，更新 docker 的 container 版本到指定的 tag
+      # - run:
+      #     name: deploy to testing server.
+      #     command: ssh deploy $CIRCLE_TAG
+
+workflows:
+  version: 2
+  test-build-publish:
+    jobs:
+      # skip test for faster ci debugging
+      - build
+      # - test
+      - publish-latest:
+          requires:
+            - build
+            # - test
+
+  test-build-publish-deploy:
+    jobs:
+      # skip test for faster ci debugging
+      - build:
+          filters:
+            tags:
+              only: /^(?:testing|smoking).*/
+            branches:
+              ignore: /.*/
+      # - test
+
+      - publish-tag:
+          filters:
+            tags:
+              only: /^(?:testing|smoking).*/
+            branches:
+              ignore: /.*/
+
+          requires:
+            - build
+            # - test
