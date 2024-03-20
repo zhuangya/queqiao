@@ -10,7 +10,7 @@ python_version = "3.8"
 pypinyin = "*"
 
 [dev-packages]
-black = "==19.3b0"
+black = "==24.3.0"
 flake8 = "*"
 isort = "*"
 mypy = "*"
